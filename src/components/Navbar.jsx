@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Droplets, Activity, GitBranch, Compass, BookOpen, Printer, Sparkles, ChevronDown, Beaker, HeartPulse, Database } from "lucide-react";
+import BrandLogo from "./BrandLogo";
+import { Sliders, Beaker, GitBranch, Printer, ChevronDown } from "lucide-react";
 import { PRESETS } from "@/lib/fuzzyEngine";
 
 export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }) {
@@ -13,21 +14,14 @@ export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 40);
 
-      if (currentScrollY > 60) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-
-      // Hide navbar when scrolling down, show when scrolling up
-      if (currentScrollY > lastScrollY && currentScrollY > 150) {
+      if (currentScrollY > lastScrollY && currentScrollY > 120) {
         setHidden(true);
         setPresetDropdownOpen(false);
       } else {
         setHidden(false);
       }
-
       setLastScrollY(currentScrollY);
     };
 
@@ -41,106 +35,61 @@ export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }
         hidden ? "-translate-y-full" : "translate-y-0"
       } ${
         scrolled
-          ? "bg-slate-950/85 backdrop-blur-md border-b border-cyan-500/20 py-2.5 shadow-xl shadow-cyan-950/20"
-          : "bg-transparent py-4 border-b border-transparent"
+          ? "bg-slate-950/80 backdrop-blur-xl border-b border-cyan-500/15 py-3 shadow-xl shadow-black/40"
+          : "bg-transparent py-5 border-b border-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Brand & Logo */}
-        <a
-          href="#top"
-          className="flex items-center gap-3 group cursor-pointer"
-          title="AquaFuzz AI - Home"
-        >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 p-[1.5px] shadow-lg shadow-cyan-500/25 group-hover:shadow-cyan-400/40 transition-all">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Droplets className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-white tracking-tight">
-                Aqua<span className="text-cyan-400">Fuzz</span>
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-                FIELD AI
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block">
-              Soft Computing Water Quality Assessment
-            </p>
-          </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between">
+        {/* Brand Logo */}
+        <a href="#top" className="cursor-pointer group" title="AquaFuzz AI Home">
+          <BrandLogo size={38} />
         </a>
 
-        {/* Section Navigation */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-sm font-medium text-slate-300">
+        {/* Minimalist Navigation */}
+        <nav className="hidden md:flex items-center gap-1 text-xs font-medium text-slate-300 bg-slate-900/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800/80">
           <a
             href="#assessment"
-            className="px-2.5 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-            title="Go to Live Assessment Simulator"
+            className="px-3 py-1 rounded-full hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer flex items-center gap-1.5"
+            title="Assessment Console"
           >
-            <Activity className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Simulator</span>
+            <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Assessment</span>
           </a>
           <a
-            href="#dosing-calculator"
-            className="px-2.5 py-1.5 rounded-lg hover:text-emerald-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-            title="Field Chemical Treatment & Dosing Calculator"
+            href="#dosing"
+            className="px-3 py-1 rounded-full hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer flex items-center gap-1.5"
+            title="Field Chemical Dosing"
           >
             <Beaker className="w-3.5 h-3.5 text-emerald-400" />
             <span>Field Dosing</span>
           </a>
           <a
-            href="#real-world-impact"
-            className="px-2.5 py-1.5 rounded-lg hover:text-rose-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-            title="Real-World Sector Impact (Health, Aquaculture, Farming)"
+            href="#fuzzy-engine"
+            className="px-3 py-1 rounded-full hover:text-white hover:bg-slate-800/60 transition-all cursor-pointer flex items-center gap-1.5"
+            title="Fuzzy Logic Curves & Rules"
           >
-            <HeartPulse className="w-3.5 h-3.5 text-rose-400" />
-            <span>Sector Impact</span>
-          </a>
-          <a
-            href="#batch-telemetry"
-            className="px-2.5 py-1.5 rounded-lg hover:text-sky-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-            title="IoT Batch CSV Telemetry Ingestion"
-          >
-            <Database className="w-3.5 h-3.5 text-sky-400" />
-            <span>Batch IoT</span>
-          </a>
-          <a
-            href="#curves"
-            className="px-2.5 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-            title="View Fuzzy Membership Curves"
-          >
-            <Compass className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Curves</span>
-          </a>
-          <a
-            href="#theory"
-            className="px-2.5 py-1.5 rounded-lg hover:text-purple-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
-            title="Soft Computing Mathematical Foundations"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
-            <span>Theory</span>
+            <GitBranch className="w-3.5 h-3.5 text-sky-400" />
+            <span>Fuzzy Logic</span>
           </a>
         </nav>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2.5">
-          {/* Preset Selector Dropdown */}
+        {/* Right Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Preset Selector */}
           <div className="relative">
             <button
               onClick={() => setPresetDropdownOpen(!presetDropdownOpen)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 border border-slate-700/80 hover:border-cyan-500/50 text-slate-200 flex items-center gap-2 transition-all cursor-pointer shadow-sm"
-              title="Load standard water source presets"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-900/90 border border-slate-800 hover:border-cyan-500/40 text-slate-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Load standard water samples"
             >
-              <span className="hidden sm:inline">Presets</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${presetDropdownOpen ? "rotate-180" : ""}`} />
+              <span>Presets</span>
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${presetDropdownOpen ? "rotate-180" : ""}`} />
             </button>
 
             {presetDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/30 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                  Select Water Source
+              <div className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl border border-cyan-500/25 rounded-2xl shadow-2xl py-2 z-50">
+                <div className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-800/80">
+                  Select Water Sample
                 </div>
                 {PRESETS.map((p) => (
                   <button
@@ -149,14 +98,13 @@ export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }
                       onSelectPreset(p);
                       setPresetDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-cyan-500/15 transition-colors cursor-pointer ${
-                      currentPresetId === p.id ? "text-cyan-300 font-semibold bg-cyan-950/40" : "text-slate-200"
+                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-cyan-500/10 transition-colors cursor-pointer ${
+                      currentPresetId === p.id ? "text-cyan-300 font-semibold bg-cyan-950/40" : "text-slate-300"
                     }`}
-                    title={p.description}
                   >
                     <span>{p.name}</span>
                     {currentPresetId === p.id && (
-                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
                     )}
                   </button>
                 ))}
@@ -164,11 +112,11 @@ export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }
             )}
           </div>
 
-          {/* Export / Print Certificate */}
+          {/* Certificate Button */}
           <button
             onClick={onOpenReport}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 flex items-center gap-1.5 shadow-md shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all cursor-pointer"
-            title="Generate & Print Official Water Quality Laboratory Certificate"
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-cyan-500/20"
+            title="Generate Official Certificate"
           >
             <Printer className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Certificate</span>
