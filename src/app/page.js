@@ -7,13 +7,16 @@ import QualityGauge from "@/components/QualityGauge";
 import SuitabilityMatrix from "@/components/SuitabilityMatrix";
 import ComparisonCard from "@/components/ComparisonCard";
 import RemediationAdvisor from "@/components/RemediationAdvisor";
+import TreatmentDosingCalculator from "@/components/TreatmentDosingCalculator";
+import RealWorldUseCases from "@/components/RealWorldUseCases";
+import BatchTelemetryAnalyzer from "@/components/BatchTelemetryAnalyzer";
 import MembershipVisualizer from "@/components/MembershipVisualizer";
 import RuleInspector from "@/components/RuleInspector";
 import RiverBasinSimulator from "@/components/RiverBasinSimulator";
 import TheorySection from "@/components/TheorySection";
 import ReportModal from "@/components/ReportModal";
-import { evaluateFuzzyWaterQuality, PRESETS, PARAM_DEFINITIONS } from "@/lib/fuzzyEngine";
-import { Droplets, Sparkles, Activity, ShieldCheck, ArrowRight, RefreshCw, Printer } from "lucide-react";
+import { evaluateFuzzyWaterQuality, PRESETS } from "@/lib/fuzzyEngine";
+import { Droplets, Sparkles, RefreshCw, Beaker, HeartPulse, Database } from "lucide-react";
 
 export default function Home() {
   const [inputs, setInputs] = useState({
@@ -108,7 +111,7 @@ export default function Home() {
         <section className="text-center pt-6 pb-2 relative">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-4 animate-in fade-in slide-in-from-top-4 duration-500">
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Soft Computing Laboratory • Mamdani Inference Model</span>
+            <span>Real-World Environmental AI • Soft Computing Laboratory</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight">
@@ -118,14 +121,39 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="mt-4 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Eliminating rigid binary cutoffs using continuous linguistic fuzzification, multi-variable Mamdani rule matrices, and geometric Centroid defuzzification.
+          <p className="mt-4 text-sm sm:text-base text-slate-400 max-w-3xl mx-auto leading-relaxed">
+            A practical decision-support system that solves real-life water challenges: prevents waterborne disease outbreaks, calculates exact chemical treatment dosages (alum, chlorine, lime), audits municipal sensor telemetry, and protects agricultural crops and aquaculture fisheries.
           </p>
+
+          {/* Quick Real-Life Problem Highlights */}
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto text-left">
+            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-emerald-500/20 flex items-start gap-2.5">
+              <Beaker className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <strong className="text-slate-200 block">Field Chemical Dosing:</strong>
+                <span className="text-slate-400 text-[11px]">Exact grams of alum, lime & ml of bleach for any batch volume.</span>
+              </div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-rose-500/20 flex items-start gap-2.5">
+              <HeartPulse className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <strong className="text-slate-200 block">Public Health & Disease:</strong>
+                <span className="text-slate-400 text-[11px]">Flags pathogen shielding & plumbing heavy-metal leaching hazards.</span>
+              </div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-cyan-500/20 flex items-start gap-2.5">
+              <Database className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+              <div className="text-xs">
+                <strong className="text-slate-200 block">IoT Batch Telemetry:</strong>
+                <span className="text-slate-400 text-[11px]">Ingest CSV logs, flag legal EPA/CPCB violations & export audit reports.</span>
+              </div>
+            </div>
+          </div>
 
           {/* Quick Preset Badges */}
           <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
             <span className="text-xs text-slate-400 font-medium mr-1">
-              Sample Case Studies:
+              Sample Field Sources:
             </span>
             {PRESETS.map((preset) => {
               const isActive = currentPresetId === preset.id;
@@ -194,6 +222,21 @@ export default function Home() {
           />
         </section>
 
+        {/* Real-Life Problem Solution 1: Chemical Dosing & Treatment Calculator */}
+        <section>
+          <TreatmentDosingCalculator inputs={inputs} evaluation={evaluation} />
+        </section>
+
+        {/* Real-Life Problem Solution 2: Sector Impact (Public Health, Aquaculture, Farming) */}
+        <section>
+          <RealWorldUseCases inputs={inputs} />
+        </section>
+
+        {/* Real-Life Problem Solution 3: Real-World IoT & CSV Batch Telemetry Ingestion */}
+        <section>
+          <BatchTelemetryAnalyzer onLoadSampleToSimulator={handleLoadStationParams} />
+        </section>
+
         {/* Visual Membership Curves Section */}
         <section>
           <MembershipVisualizer inputs={inputs} evaluation={evaluation} />
@@ -235,7 +278,7 @@ export default function Home() {
                 AquaFuzz AI • Soft Computing Laboratory
               </div>
               <div className="text-[11px] text-slate-500">
-                Mamdani Fuzzy Logic Inference System for Environmental Quality Modeling
+                Solving Real-World Water Contamination, Treatment Dosing & Regulatory Monitoring
               </div>
             </div>
           </div>
@@ -244,14 +287,17 @@ export default function Home() {
             <a href="#assessment" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to assessment simulator">
               Simulator
             </a>
+            <a href="#dosing-calculator" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to chemical dosing">
+              Dosing Calculator
+            </a>
+            <a href="#real-world-impact" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to sector impact">
+              Sector Impact
+            </a>
+            <a href="#batch-telemetry" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to batch telemetry">
+              Batch IoT
+            </a>
             <a href="#curves" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to membership curves">
-              Membership Curves
-            </a>
-            <a href="#inference" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to rule base">
-              Rule Matrix
-            </a>
-            <a href="#river-route" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to river simulation">
-              River Route
+              Curves
             </a>
             <a href="#theory" className="hover:text-cyan-300 transition-colors cursor-pointer" title="Jump to theory section">
               Theory

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Droplets, Activity, GitBranch, Compass, BookOpen, Printer, Sparkles, ChevronDown } from "lucide-react";
+import { Droplets, Activity, GitBranch, Compass, BookOpen, Printer, Sparkles, ChevronDown, Beaker, HeartPulse, Database } from "lucide-react";
 import { PRESETS } from "@/lib/fuzzyEngine";
 
 export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }) {
@@ -63,7 +63,7 @@ export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }
                 Aqua<span className="text-cyan-400">Fuzz</span>
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-                MAMDANI v2.4
+                FIELD AI
               </span>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">
@@ -73,45 +73,53 @@ export default function Navbar({ onSelectPreset, onOpenReport, currentPresetId }
         </a>
 
         {/* Section Navigation */}
-        <nav className="hidden md:flex items-center gap-1 lg:gap-2 text-sm font-medium text-slate-300">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-sm font-medium text-slate-300">
           <a
             href="#assessment"
-            className="px-3 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
             title="Go to Live Assessment Simulator"
           >
-            <Activity className="w-4 h-4 text-cyan-400" />
-            <span>Assessment</span>
+            <Activity className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Simulator</span>
+          </a>
+          <a
+            href="#dosing-calculator"
+            className="px-2.5 py-1.5 rounded-lg hover:text-emerald-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+            title="Field Chemical Treatment & Dosing Calculator"
+          >
+            <Beaker className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Field Dosing</span>
+          </a>
+          <a
+            href="#real-world-impact"
+            className="px-2.5 py-1.5 rounded-lg hover:text-rose-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+            title="Real-World Sector Impact (Health, Aquaculture, Farming)"
+          >
+            <HeartPulse className="w-3.5 h-3.5 text-rose-400" />
+            <span>Sector Impact</span>
+          </a>
+          <a
+            href="#batch-telemetry"
+            className="px-2.5 py-1.5 rounded-lg hover:text-sky-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+            title="IoT Batch CSV Telemetry Ingestion"
+          >
+            <Database className="w-3.5 h-3.5 text-sky-400" />
+            <span>Batch IoT</span>
           </a>
           <a
             href="#curves"
-            className="px-3 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
             title="View Fuzzy Membership Curves"
           >
-            <Compass className="w-4 h-4 text-emerald-400" />
-            <span>Membership Curves</span>
-          </a>
-          <a
-            href="#inference"
-            className="px-3 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer"
-            title="Examine Mamdani Rule Base and Defuzzification"
-          >
-            <GitBranch className="w-4 h-4 text-sky-400" />
-            <span>Rule Matrix</span>
-          </a>
-          <a
-            href="#river-route"
-            className="px-3 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer"
-            title="Simulate River Basin Degradation Route"
-          >
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>River Route</span>
+            <Compass className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Curves</span>
           </a>
           <a
             href="#theory"
-            className="px-3 py-1.5 rounded-lg hover:text-cyan-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg hover:text-purple-300 hover:bg-slate-900/60 transition-all flex items-center gap-1.5 cursor-pointer text-xs"
             title="Soft Computing Mathematical Foundations"
           >
-            <BookOpen className="w-4 h-4 text-purple-400" />
+            <BookOpen className="w-3.5 h-3.5 text-purple-400" />
             <span>Theory</span>
           </a>
         </nav>
