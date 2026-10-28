@@ -1,6 +1,19 @@
 {
-  "name": "project_softcumputing",
-  "version": "0.1.0",
+  "name": "aquafuzz-ai",
+  "version": "1.0.0",
+  "description": "AquaFuzz AI: A Mamdani Fuzzy Inference System for Environmental Water Quality Assessment, Sector Risk Modeling, and Chemical Dosing Calculations.",
+  "author": "Ashank Gupta",
+  "license": "MIT",
+  "keywords": [
+    "fuzzy-logic",
+    "soft-computing",
+    "mamdani-inference",
+    "water-quality-assessment",
+    "fwqi",
+    "environmental-intelligence",
+    "nextjs",
+    "tailwind-css"
+  ],
   "private": true,
   "scripts": {
     "dev": "next dev",

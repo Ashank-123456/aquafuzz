@@ -1,11 +1,34 @@
 /**
- * Fuzzy Water Quality Assessment (FWQA) Engine
- * Implements Mamdani Fuzzy Inference System for Soft Computing Applications
- * Author: Ashank Gupta
+ * AquaFuzz AI - Mamdani Fuzzy Inference System (FIS) Core Engine
+ * 
+ * Provides continuous mathematical modeling of environmental water quality,
+ * translating crisp sensory readings (pH, Turbidity, DO, TDS) into linguistic
+ * truth values and defuzzifying the aggregate outcome via Center of Gravity (COG).
+ * 
+ * @module fuzzyEngine
+ * @author Ashank Gupta
+ * @license MIT
  */
 
-// --- Membership Function Utilities ---
+// ============================================================================
+// 1. MEMBERSHIP FUNCTION (MF) PRIMITIVES
+// ============================================================================
 
+/**
+ * Evaluates a Triangular Membership Function: μ(x; a, b, c)
+ * 
+ *          1 |       /\
+ *            |      /  \
+ *            |     /    \
+ *          0 |____/______\____
+ *                 a   b   c
+ * 
+ * @param {number} x - The crisp input value to evaluate.
+ * @param {number} a - The left baseline anchor (μ = 0).
+ * @param {number} b - The apex peak center (μ = 1).
+ * @param {number} c - The right baseline anchor (μ = 0).
+ * @returns {number} Degree of membership in the interval [0, 1].
+ */
 export function triangularMF(x, a, b, c) {
   if (x <= a || x >= c) return 0;
   if (x === b) return 1;
@@ -13,6 +36,22 @@ export function triangularMF(x, a, b, c) {
   return (c - x) / (c - b);
 }
 
+/**
+ * Evaluates a Trapezoidal Membership Function: μ(x; a, b, c, d)
+ * 
+ *          1 |      /------\
+ *            |     /        \
+ *            |    /          \
+ *          0 |___/____________\___
+ *                a  b      c   d
+ * 
+ * @param {number} x - The crisp input value to evaluate.
+ * @param {number} a - Left lower anchor (μ = 0).
+ * @param {number} b - Left upper plateau start (μ = 1).
+ * @param {number} c - Right upper plateau end (μ = 1).
+ * @param {number} d - Right lower anchor (μ = 0).
+ * @returns {number} Degree of membership in the interval [0, 1].
+ */
 export function trapezoidalMF(x, a, b, c, d) {
   if (x <= a || x >= d) return 0;
   if (x >= b && x <= c) return 1;
@@ -20,12 +59,26 @@ export function trapezoidalMF(x, a, b, c, d) {
   return (d - x) / (d - c);
 }
 
+/**
+ * Evaluates a Gaussian Membership Function: μ(x; c, σ)
+ * 
+ * @param {number} x - The crisp input value.
+ * @param {number} c - The distribution center mean.
+ * @param {number} sigma - The standard deviation spread.
+ * @returns {number} Degree of membership in the interval [0, 1].
+ */
 export function gaussianMF(x, c, sigma) {
   return Math.exp(-0.5 * Math.pow((x - c) / sigma, 2));
 }
 
-// --- Parameter Definitions & Membership Sets ---
+// ============================================================================
+// 2. INPUT VARIABLE DEFINITIONS & LINGUISTIC SETS
+// ============================================================================
 
+/**
+ * Standard environmental parameter bounds, measurement units, and linguistic sets.
+ * Aligned with World Health Organization (WHO) and EPA potable water guidelines.
+ */
 export const PARAM_DEFINITIONS = {
   ph: {
     id: "ph",
@@ -36,7 +89,7 @@ export const PARAM_DEFINITIONS = {
     step: 0.1,
     default: 7.2,
     standardIdeal: "6.5 - 8.5",
-    description: "Measure of acidity or basicity of water. Crucial for biochemical reactions and chemical toxicity.",
+    description: "Measure of hydrogen-ion concentration. Governs chemical toxicity and pipe corrosion.",
     sets: [
       { id: "acidic", name: "Acidic / Corrosive", color: "#f43f5e", mf: (x) => trapezoidalMF(x, 0, 0, 5.8, 6.6) },
       { id: "neutral", name: "Optimal / Neutral", color: "#10b981", mf: (x) => triangularMF(x, 6.3, 7.3, 8.3) },
@@ -52,7 +105,7 @@ export const PARAM_DEFINITIONS = {
     step: 0.5,
     default: 2.5,
     standardIdeal: "< 5.0 NTU",
-    description: "Cloudiness caused by suspended particles, pathogens, and runoff silt.",
+    description: "Cloudiness caused by suspended silt and organic matter that shields pathogens.",
     sets: [
       { id: "clear", name: "Crystal / Low", color: "#06b6d4", mf: (x) => trapezoidalMF(x, 0, 0, 2.0, 5.0) },
       { id: "moderate", name: "Moderate", color: "#f59e0b", mf: (x) => triangularMF(x, 3.5, 10.0, 22.0) },
@@ -68,7 +121,7 @@ export const PARAM_DEFINITIONS = {
     step: 0.1,
     default: 7.8,
     standardIdeal: "> 6.5 mg/L",
-    description: "Concentration of free, non-compound O2 dissolved in water essential for aquatic health.",
+    description: "Concentration of free non-compound oxygen vital for biological respiration.",
     sets: [
       { id: "depleted", name: "Hypoxic / Low", color: "#ef4444", mf: (x) => trapezoidalMF(x, 0, 0, 3.0, 5.2) },
       { id: "moderate", name: "Moderate", color: "#f59e0b", mf: (x) => triangularMF(x, 4.2, 6.8, 8.8) },
@@ -77,39 +130,25 @@ export const PARAM_DEFINITIONS = {
   },
   tds: {
     id: "tds",
-    name: "Total Dissolved Solids (TDS)",
-    unit: "mg/L (ppm)",
+    name: "Total Dissolved Solids",
+    unit: "ppm",
     min: 0,
     max: 2000,
     step: 10,
     default: 220,
-    standardIdeal: "< 300 mg/L",
-    description: "Total organic and inorganic substances (salts, minerals, metals) molecularly suspended in liquid.",
+    standardIdeal: "< 300 ppm",
+    description: "Cumulative measure of dissolved inorganic salts, calcium, magnesium, and minerals.",
     sets: [
       { id: "pure", name: "Desirable / Low", color: "#06b6d4", mf: (x) => trapezoidalMF(x, 0, 0, 250, 450) },
       { id: "permissible", name: "Permissible", color: "#f59e0b", mf: (x) => triangularMF(x, 350, 600, 950) },
       { id: "excessive", name: "Contaminated / High", color: "#ef4444", mf: (x) => trapezoidalMF(x, 800, 1200, 2000, 2000) }
     ]
-  },
-  temperature: {
-    id: "temperature",
-    name: "Water Temperature",
-    unit: "°C",
-    min: 0,
-    max: 45,
-    step: 0.5,
-    default: 22.0,
-    standardIdeal: "18 - 25 °C",
-    description: "Affects biological metabolic rates and gas solubility (warmer water holds less DO).",
-    sets: [
-      { id: "cool", name: "Cold / Chilled", color: "#38bdf8", mf: (x) => trapezoidalMF(x, 0, 0, 12, 18) },
-      { id: "temperate", name: "Optimal / Temperate", color: "#10b981", mf: (x) => triangularMF(x, 15, 22, 28) },
-      { id: "warm", name: "Thermal / Warm", color: "#f97316", mf: (x) => trapezoidalMF(x, 26, 32, 45, 45) }
-    ]
   }
 };
 
-// --- Output Variable: Fuzzy Water Quality Index (FWQI: 0 - 100) ---
+// ============================================================================
+// 3. OUTPUT VARIABLE: FUZZY WATER QUALITY INDEX (FWQI: 0 - 100)
+// ============================================================================
 
 export const OUTPUT_SETS = [
   { id: "severe", name: "Severe / Toxic", color: "#dc2626", grade: "E", mf: (z) => trapezoidalMF(z, 0, 0, 15, 30) },
@@ -119,8 +158,10 @@ export const OUTPUT_SETS = [
   { id: "excellent", name: "Pristine / Excellent", color: "#10b981", grade: "A", mf: (z) => trapezoidalMF(z, 80, 92, 100, 100) }
 ];
 
-// --- Comprehensive Fuzzy Mamdani Rule Base ---
-// Antecedents: [pH, Turbidity, DO, TDS, optional Temperature]
+// ============================================================================
+// 4. MAMDANI RULE BASE (20 ENVIRONMENTAL DOMAIN RULES)
+// ============================================================================
+
 export const FUZZY_RULES = [
   {
     id: 1,
@@ -268,23 +309,25 @@ export const FUZZY_RULES = [
   },
   {
     id: 19,
-    name: "High Temperature Thermal Shock",
-    conditions: { ph: "neutral", turbidity: "clear", do: "depleted", tds: "pure", temperature: "warm" },
-    output: "poor",
+    name: "Turbid Mineral Runoff",
+    conditions: { ph: "neutral", turbidity: "turbid", do: "rich", tds: "excessive" },
+    output: "moderate",
     weight: 0.9,
-    rationale: "Thermal pollution lowers gas solubility drastically."
+    rationale: "High oxygen buffers sediment payload but clarity remains restricted."
   },
   {
     id: 20,
     name: "Sub-Zero Pristine Glacial Runoff",
-    conditions: { ph: "neutral", turbidity: "clear", do: "rich", tds: "pure", temperature: "cool" },
+    conditions: { ph: "neutral", turbidity: "clear", do: "rich", tds: "pure" },
     output: "excellent",
     weight: 1.0,
     rationale: "Cold temperature enables maximum oxygen saturation and mineral clarity."
   }
 ];
 
-// --- Standard Presets for Instant Case-Study Exploration ---
+// ============================================================================
+// 5. STANDARD CASE STUDY PRESETS
+// ============================================================================
 
 export const PRESETS = [
   {
@@ -292,57 +335,67 @@ export const PRESETS = [
     name: "Alpine Mountain Spring",
     icon: "Mountain",
     description: "Untouched glacial source with pristine clarity, neutral pH, and superior dissolved oxygen.",
-    params: { ph: 7.4, turbidity: 0.8, do: 10.2, tds: 110, temperature: 11.5 }
+    params: { ph: 7.4, turbidity: 0.8, do: 10.2, tds: 110 }
   },
   {
     id: "municipal_tap",
     name: "Municipal Treated Tap",
     icon: "GlassWater",
     description: "Standard city distribution conforming to WHO/EPA potable standards.",
-    params: { ph: 7.2, turbidity: 2.1, do: 7.5, tds: 260, temperature: 20.0 }
+    params: { ph: 7.2, turbidity: 2.1, do: 7.5, tds: 260 }
   },
   {
     id: "rural_well",
     name: "Rural Groundwater Well",
     icon: "Droplets",
     description: "Naturally filtered subterranean aquifer with moderate mineral hardness.",
-    params: { ph: 7.6, turbidity: 3.8, do: 5.8, tds: 480, temperature: 21.0 }
+    params: { ph: 7.6, turbidity: 3.8, do: 5.8, tds: 480 }
   },
   {
     id: "agricultural_runoff",
     name: "Agricultural Runoff Canal",
     icon: "Wheat",
     description: "High fertilizer and silt payload; elevated turbidity and oxygen depletion.",
-    params: { ph: 6.4, turbidity: 28.5, do: 4.1, tds: 680, temperature: 25.5 }
+    params: { ph: 6.4, turbidity: 28.5, do: 4.1, tds: 680 }
   },
   {
     id: "eutrophic_lake",
     name: "Eutrophic Urban Lake",
     icon: "Waves",
     description: "Stagnant recreational reservoir suffering from micro-algal blooms and low DO.",
-    params: { ph: 8.7, turbidity: 19.0, do: 3.5, tds: 520, temperature: 27.0 }
+    params: { ph: 8.7, turbidity: 19.0, do: 3.5, tds: 520 }
   },
   {
     id: "industrial_effluent",
     name: "Untreated Industrial Outfall",
     icon: "Flame",
     description: "Corrosive, toxic wastewater with severe suspended solids and near-zero oxygen.",
-    params: { ph: 4.6, turbidity: 68.0, do: 1.8, tds: 1420, temperature: 34.0 }
+    params: { ph: 4.6, turbidity: 68.0, do: 1.8, tds: 1420 }
   }
 ];
 
-// --- Mamdani Fuzzy Inference Engine ---
+// ============================================================================
+// 6. MAMDANI INFERENCE EXECUTION PIPELINE
+// ============================================================================
 
 /**
- * Evaluates inputs against Mamdani fuzzy system
- * @param {Object} inputValues - { ph, turbidity, do, tds, [temperature] }
- * @param {Object} options - { tNorm: 'min'|'product', defuzzMethod: 'centroid'|'mom'|'bisector' }
+ * Evaluates water sample inputs through the Mamdani Fuzzy Inference System.
+ * 
+ * Steps executed:
+ * 1. Fuzzification: Computes μ(x) for all inputs across all linguistic sets.
+ * 2. Rule Evaluation: Calculates antecedent firing strength α via T-norm (min or product).
+ * 3. Aggregation: Implicates clipped output fuzzy regions via S-norm (max).
+ * 4. Defuzzification: Computes crisp FWQI score (0-100) via Centroid (COG).
+ * 
+ * @param {Object} inputValues - Measured parameters { ph, turbidity, do, tds }.
+ * @param {Object} [options] - Engine tuning { tNorm: 'min'|'product', defuzzMethod: 'centroid'|'mom'|'bisector' }.
+ * @returns {Object} Comprehensive evaluation metrics, classification, and firing details.
  */
 export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
-  const tNorm = options.tNorm || "min"; // 'min' or 'product'
+  const tNorm = options.tNorm || "min";
   const defuzzMethod = options.defuzzMethod || "centroid";
 
-  // Step 1: Fuzzification (Calculate membership degrees for all inputs)
+  // Step 1: Fuzzification
   const fuzzified = {};
   for (const [paramKey, paramDef] of Object.entries(PARAM_DEFINITIONS)) {
     const val = inputValues[paramKey] !== undefined ? inputValues[paramKey] : paramDef.default;
@@ -352,7 +405,7 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
     }
   }
 
-  // Step 2: Rule Evaluation (Evaluate Rule Strengths via T-Norm)
+  // Step 2: Rule Evaluation
   const evaluatedRules = [];
   const ruleFiringsByOutput = {
     severe: 0,
@@ -366,12 +419,7 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
     let antecedentStrength = 1.0;
     const conditionStrengths = {};
 
-    let hasCondition = false;
     for (const [paramKey, expectedSetId] of Object.entries(rule.conditions)) {
-      if (inputValues[paramKey] === undefined && paramKey === "temperature") {
-        continue; // optional parameter omitted
-      }
-      hasCondition = true;
       const memDegree = fuzzified[paramKey]?.[expectedSetId] || 0;
       conditionStrengths[paramKey] = {
         setId: expectedSetId,
@@ -381,14 +429,10 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
       if (tNorm === "product") {
         antecedentStrength *= memDegree;
       } else {
-        // Standard Min Mamdani
         antecedentStrength = Math.min(antecedentStrength, memDegree);
       }
     }
 
-    if (!hasCondition) continue;
-
-    // Apply rule weight
     const firingStrength = antecedentStrength * (rule.weight || 1.0);
 
     evaluatedRules.push({
@@ -397,14 +441,13 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
       firingStrength: Number(firingStrength.toFixed(4))
     });
 
-    // Aggregate maximum firing strength for this output set (S-norm = max)
     if (firingStrength > (ruleFiringsByOutput[rule.output] || 0)) {
       ruleFiringsByOutput[rule.output] = firingStrength;
     }
   }
 
-  // Step 3: Fuzzy Aggregation & Defuzzification (over universe of discourse Z: 0 to 100)
-  const numSamples = 201; // Step of 0.5 along [0, 100]
+  // Step 3: Aggregation & Defuzzification (over Z: 0 to 100)
+  const numSamples = 201;
   const zStep = 100 / (numSamples - 1);
   const aggregatedCurve = [];
 
@@ -415,15 +458,12 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
 
   for (let i = 0; i < numSamples; i++) {
     const z = i * zStep;
-    // Calculate aggregated membership degree for output z
     let muZ = 0;
 
     for (const outSet of OUTPUT_SETS) {
       const setMembership = outSet.mf(z);
       const ruleCut = ruleFiringsByOutput[outSet.id] || 0;
-      // Mamdani clipping (min)
       const clipped = Math.min(setMembership, ruleCut);
-      // S-norm aggregation (max)
       muZ = Math.max(muZ, clipped);
     }
 
@@ -440,14 +480,12 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
     }
   }
 
-  // Defuzzification calculations
-  let crispFWQI = 50.0; // fallback default
+  // Defuzzification calculation
+  let crispFWQI = 50.0;
   if (denominatorCentroid > 0.0001) {
     if (defuzzMethod === "mom") {
-      // Mean of Maxima
       crispFWQI = maxDegreeZValues.reduce((a, b) => a + b, 0) / maxDegreeZValues.length;
     } else if (defuzzMethod === "bisector") {
-      // Bisector: finds z that divides area under aggregated curve in two equal halves
       const halfArea = denominatorCentroid / 2;
       let runningArea = 0;
       for (const pt of aggregatedCurve) {
@@ -458,17 +496,14 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
         }
       }
     } else {
-      // Default: Centroid (COG)
       crispFWQI = numeratorCentroid / denominatorCentroid;
     }
   } else {
-    // If no specific rules fire (edge boundary fallback), calculate distance-weighted index
     crispFWQI = calculateClassicalWQI(inputValues).index;
   }
 
   crispFWQI = Math.max(0, Math.min(100, Number(crispFWQI.toFixed(2))));
 
-  // Step 4: Quality Classification & Use Suitabilities
   const classification = getQualityCategory(crispFWQI);
   const classicalComparison = calculateClassicalWQI(inputValues);
   const recommendations = getRemediationAdvice(inputValues, crispFWQI);
@@ -488,8 +523,16 @@ export function evaluateFuzzyWaterQuality(inputValues, options = {}) {
   };
 }
 
-// --- Quality Category Mapping ---
+// ============================================================================
+// 7. COMPLIANCE MAPPING & BASELINES
+// ============================================================================
 
+/**
+ * Maps a crisp FWQI score to qualitative environmental grade and compliance flags.
+ * 
+ * @param {number} score - Scaled FWQI score [0, 100].
+ * @returns {Object} Regulatory classification verdict.
+ */
 export function getQualityCategory(score) {
   if (score >= 85) {
     return {
@@ -576,25 +619,24 @@ export function getQualityCategory(score) {
   };
 }
 
-// --- Classical Arithmetic WQI Baseline (Weighted Arithmetic Index Method) ---
-// Demonstrates why Fuzzy Logic is vastly superior for environmental grading
+/**
+ * Calculates baseline Classical Weighted Arithmetic Water Quality Index (Brown et al.)
+ * Demonstrates the masking and cliff effect pitfalls of classical linear modeling.
+ * 
+ * @param {Object} inputs - Water readings { ph, turbidity, do, tds }.
+ * @returns {Object} Classical index and comparative critique.
+ */
 export function calculateClassicalWQI(inputs) {
-  // Relative weights W_i for parameters: sum(w_i) = 1.0
   const weights = { ph: 0.25, turbidity: 0.25, do: 0.30, tds: 0.20 };
 
-  // Sub-index q_i (0-100) where 100 is best quality
   const phVal = inputs.ph ?? 7.2;
   const turbVal = inputs.turbidity ?? 2.5;
   const doVal = inputs.do ?? 7.8;
   const tdsVal = inputs.tds ?? 220;
 
-  // pH sub-index (ideal 7.0)
   const q_ph = Math.max(0, 100 - Math.abs(phVal - 7.0) * 35);
-  // Turbidity sub-index (ideal 0 NTU, 25 NTU = 0)
   const q_turb = Math.max(0, 100 - (turbVal / 25) * 100);
-  // DO sub-index (ideal >= 8.5 mg/L, 2 mg/L = 0)
   const q_do = Math.min(100, Math.max(0, (doVal / 9.0) * 100));
-  // TDS sub-index (ideal <= 150, 1000 = 0)
   const q_tds = Math.max(0, 100 - (tdsVal / 1000) * 100);
 
   const classicalScore = Number(
@@ -614,11 +656,15 @@ export function calculateClassicalWQI(inputs) {
   };
 }
 
-// --- Dynamic Environmental Remediation Advisor ---
-
+/**
+ * Generates targeted remediation advice based on input parameter deviations.
+ * 
+ * @param {Object} inputs - Water parameters.
+ * @param {number} score - Computed FWQI score.
+ * @returns {Array<Object>} Remediation actions list.
+ */
 export function getRemediationAdvice(inputs, score) {
   const actions = [];
-
   const ph = inputs.ph ?? 7.2;
   const turb = inputs.turbidity ?? 2.5;
   const doVal = inputs.do ?? 7.8;

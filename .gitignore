@@ -1,7 +1,10 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ========================================================
+# AquaFuzz AI - Public GitHub GitIgnore
+# Author: Ashank Gupta
+# ========================================================
 
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -10,32 +13,56 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# Next.js Build Outputs
+.next/
+out/
+build/
+dist/
 
-# next.js
-/.next/
-/out/
+# Testing & Coverage
+coverage/
+*.lcov
+.nyc_output
 
-# production
-/build
+# Environment Variables (Keep sensitive keys private)
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Debug & Error Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
 
-# vercel
+# IDE & Editor Settings
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vercel Deployment
 .vercel
 
-# typescript
+# TypeScript & Build Cache
 *.tsbuildinfo
 next-env.d.ts
+.turbo/

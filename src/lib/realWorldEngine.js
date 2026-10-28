@@ -1,66 +1,72 @@
 /**
- * Real-World Environmental Engineering & Field Treatment Engine
- * Translates fuzzy assessment into actionable real-life interventions,
- * sector-specific agricultural & aquaculture risk ratings, and chemical dosing calculations.
- * Author: Ashank Gupta
+ * AquaFuzz AI - Real-World Field Treatment & Chemical Dosing Engine
+ * 
+ * Provides field-ready chemical calculations (alum, bleach, lime) based on jar-test
+ * correlations, public health pathogen vulnerability estimates, and agricultural
+ * salinity hazard indices.
+ * 
+ * @module realWorldEngine
+ * @author Ashank Gupta
+ * @license MIT
  */
 
-// --- Real-Life Chemical Treatment & Dosing Protocols ---
+// ============================================================================
+// 1. IN-FIELD CHEMICAL DOSING CALCULATOR
+// ============================================================================
 
 /**
- * Calculates emergency and municipal treatment chemical dosages for a given batch volume
- * @param {Object} inputs - { ph, turbidity, do, tds }
- * @param {number} volumeLiters - Volume of water to treat in liters
+ * Calculates emergency chemical dosages for a batch volume of contaminated water.
+ * 
+ * Formulations:
+ * - Coagulation: Based on Jar Test standard dosage curve (mg/L Alum).
+ * - Disinfection: Target 0.8 mg/L free chlorine residual over turbidity demand.
+ * - Neutralization: Lime Ca(OH)2 dosage to balance pH deficit below 6.5.
+ * 
+ * @param {Object} inputs - Water readings { ph, turbidity, do, tds }.
+ * @param {number} [volumeLiters=1000] - Volume in liters to treat.
+ * @returns {Object} Calculated dosages, procedures, and batch cost.
  */
 export function calculateChemicalDosing(inputs, volumeLiters = 1000) {
   const ph = inputs.ph ?? 7.2;
   const turb = inputs.turbidity ?? 2.5;
   const doVal = inputs.do ?? 7.8;
-  const tds = inputs.tds ?? 220;
 
   // 1. Coagulant Dosing (Alum: Al2(SO4)3 · 14H2O)
-  // Standard Jar Test correlation: 0-5 NTU -> 5-10 mg/L; 5-20 NTU -> 15-30 mg/L; 20-50 NTU -> 35-50 mg/L; >50 NTU -> 60-90 mg/L
   let alumMgPerL = 0;
   if (turb > 50) alumMgPerL = 75;
   else if (turb > 20) alumMgPerL = 45;
   else if (turb > 10) alumMgPerL = 25;
   else if (turb > 4) alumMgPerL = 12;
-  else alumMgPerL = 0; // Natural settling or micro-filtration sufficient
+  else alumMgPerL = 0;
 
   const totalAlumGrams = Number(((alumMgPerL * volumeLiters) / 1000).toFixed(1));
 
-  // 2. Disinfection Dosing (Sodium Hypochlorite / Liquid Bleach ~5% active chlorine)
-  // Target residual free chlorine = 0.5 - 2.0 mg/L after chlorine demand (turbidity consumes chlorine)
-  // Chlorine demand = 1.0 mg/L + (turbidity * 0.08)
+  // 2. Disinfection Dosing (5% Household Liquid Bleach NaOCl)
   const chlorineDemandMgL = 1.0 + (turb > 5 ? turb * 0.08 : 0);
   const targetResidualMgL = 0.8;
   const totalChlorineMgL = chlorineDemandMgL + targetResidualMgL;
-  // Using 5% household liquid bleach (50,000 mg/L available chlorine)
-  const bleachMlPerLiter = totalChlorineMgL / 50; // ml bleach per L
+  const bleachMlPerLiter = totalChlorineMgL / 50;
   const totalBleachMl = Number((bleachMlPerLiter * volumeLiters).toFixed(1));
   const chlorineTablets33mg = Math.ceil((totalChlorineMgL * volumeLiters) / 33);
 
-  // 3. pH Neutralization Dosing (Hydrated Lime Ca(OH)2 or Soda Ash Na2CO3)
+  // 3. pH Neutralization Dosing (Hydrated Lime Ca(OH)2)
   let limeGrams = 0;
   let acidGrams = 0;
   if (ph < 6.5) {
-    // Acidic water: lime required to raise pH to 7.2 (~10 mg/L per 0.5 pH deficit)
     const phDeficit = 7.2 - ph;
     const limeMgL = phDeficit * 22;
     limeGrams = Number(((limeMgL * volumeLiters) / 1000).toFixed(1));
   } else if (ph > 8.5) {
-    // Alkaline water: citric acid or alum neutralizer
     const phExcess = ph - 7.5;
     acidGrams = Number(((phExcess * 18 * volumeLiters) / 1000).toFixed(1));
   }
 
-  // 4. Physical Settling & Aeration Times
+  // 4. Physical Timings
   const settlingMinutes = turb > 30 ? 60 : turb > 10 ? 35 : 15;
   const aerationMinutes = doVal < 3.0 ? 45 : doVal < 5.0 ? 20 : 0;
-  const boilMinutes = 3; // Rolling boil for bacterial/parasitic cyst kill
+  const boilMinutes = 3;
 
-  // 5. Treatment Cost Estimation (USD / Local currency equivalent)
-  // Alum ~$0.40/kg, Bleach ~$0.60/L, Lime ~$0.30/kg
+  // 5. Estimated Cost in USD
   const estimatedCostUSD = Number(
     (
       (totalAlumGrams / 1000) * 0.4 +
@@ -76,7 +82,7 @@ export function calculateChemicalDosing(inputs, volumeLiters = 1000) {
       concentrationMgL: alumMgPerL,
       totalGrams: totalAlumGrams,
       procedure: alumMgPerL > 0 
-        ? `Dissolve ${totalAlumGrams}g of alum powder in a small cup of water, stir vigorously into tank for 2 minutes (rapid mix), then agitate gently for 5 minutes.`
+        ? `Dissolve ${totalAlumGrams}g of alum powder in a cup of water; stir rapidly into tank for 2 minutes, then agitate gently for 5 minutes.`
         : "Turbidity is low. No chemical coagulant needed; direct sand filtration or sediment cartridge is adequate."
     },
     disinfection: {
@@ -103,23 +109,29 @@ export function calculateChemicalDosing(inputs, volumeLiters = 1000) {
   };
 }
 
-// --- Sector 1: Aquaculture & Fisheries Safety Engine ---
+// ============================================================================
+// 2. SECTOR 1: AQUACULTURE & FISHERIES
+// ============================================================================
+
+/**
+ * Assesses aquatic habitat and commercial fish species survival.
+ * 
+ * @param {Object} inputs - Measured water parameters.
+ * @returns {Object} Hypoxia severity, ammonia risk, and species suitability.
+ */
 export function evaluateAquacultureSuitability(inputs) {
   const ph = inputs.ph ?? 7.2;
   const doVal = inputs.do ?? 7.8;
   const turb = inputs.turbidity ?? 2.5;
   const tds = inputs.tds ?? 220;
 
-  // Ammonia Toxicity Factor: Unionized toxic NH3 increases drastically as pH rises above 8.0!
   const ammoniaRiskLevel = ph > 8.5 ? "Critical Toxic" : ph > 8.0 ? "Elevated Danger" : "Safe Minimal";
 
-  // Dissolved Oxygen Asphyxiation Stress
   let hypoxiaSeverity = "Optimal";
   if (doVal < 2.0) hypoxiaSeverity = "Acute Lethal Suffocation (< 2 mg/L)";
   else if (doVal < 4.0) hypoxiaSeverity = "Severe Stress / Stunted Growth";
   else if (doVal < 6.0) hypoxiaSeverity = "Sub-Optimal / Reduced Appetite";
 
-  // Species Tolerance Matrix
   const species = [
     {
       name: "Trout & Salmon (Coldwater Salmonids)",
@@ -159,13 +171,21 @@ export function evaluateAquacultureSuitability(inputs) {
   };
 }
 
-// --- Sector 2: Agriculture & Crop Irrigation Engine ---
+// ============================================================================
+// 3. SECTOR 2: AGRICULTURE & CROP IRRIGATION
+// ============================================================================
+
+/**
+ * Assesses agricultural irrigation suitability per US Salinity Laboratory standards.
+ * 
+ * @param {Object} inputs - Water parameters.
+ * @returns {Object} Salinity class, clogging risk, and crop suitability list.
+ */
 export function evaluateAgriculturalSuitability(inputs) {
   const ph = inputs.ph ?? 7.2;
   const tds = inputs.tds ?? 220;
   const turb = inputs.turbidity ?? 2.5;
 
-  // Salinity Hazard Classification (US Salinity Laboratory standard)
   let salinityClass = "C1 (Low Salinity)";
   let salinityDescription = "Can be used for irrigation with most crops on most soils.";
   if (tds > 1200) {
@@ -179,10 +199,7 @@ export function evaluateAgriculturalSuitability(inputs) {
     salinityDescription = "Can be used if a moderate degree of leaching occurs. Most plants can be grown.";
   }
 
-  // Drip Emitter Clogging Risk (from suspended silt / turbidity)
   const dripCloggingRisk = turb > 30 ? "Severe Clogging (Requires Disc Filter + Settling Basin)" : turb > 10 ? "Moderate Clogging (Screen Filter Recommended)" : "Low Clogging Risk";
-
-  // Soil Infiltration & Alkalinity Threat
   const soilHazard = ph < 6.0 ? "Soil Acidification & Aluminum Toxicity" : ph > 8.4 ? "Soil Dispersion & Reduced Water Permeability" : "Optimal Neutral Soil Compatibility";
 
   const crops = [
@@ -201,15 +218,22 @@ export function evaluateAgriculturalSuitability(inputs) {
   };
 }
 
-// --- Sector 3: Public Health & Waterborne Pathogen Risk Index ---
+// ============================================================================
+// 4. SECTOR 3: PUBLIC HEALTH & EPIDEMIOLOGY
+// ============================================================================
+
+/**
+ * Computes waterborne pathogen risk and corrosive heavy-metal leaching hazard.
+ * 
+ * @param {Object} inputs - Water readings.
+ * @returns {Object} Illness risk %, pathogen shielding factor, and plumbing leaching hazard.
+ */
 export function evaluateHealthAndPathogenRisk(inputs) {
   const turb = inputs.turbidity ?? 2.5;
   const ph = inputs.ph ?? 7.2;
-  const tds = inputs.tds ?? 220;
 
-  // Turbidity is the #1 real-world vector that shields bacteria (Cryptosporidium, Giardia, E. Coli) from UV and chlorine disinfection
   let pathogenShielding = "Low (Clarity permits effective UV / Chlorine penetration)";
-  let illnessRiskPercent = 2; // baseline
+  let illnessRiskPercent = 2;
 
   if (turb > 30) {
     pathogenShielding = "Extreme Threat (Particulates completely shield pathogens from chemical disinfection)";
@@ -222,7 +246,6 @@ export function evaluateHealthAndPathogenRisk(inputs) {
     illnessRiskPercent = 22;
   }
 
-  // Heavy Metal Leaching Hazard (Acidic water corrodes copper and lead service pipes)
   const leadCopperLeachingHazard = ph < 6.5 ? "Critical (Corrosive pH leaches lead, copper, and iron from plumbing)" : "Safe Passivated (Water forms protective mineral film on pipes)";
 
   return {
@@ -233,7 +256,10 @@ export function evaluateHealthAndPathogenRisk(inputs) {
   };
 }
 
-// --- Real-World Benchmark Datasets for 1-Click Field Ingestion ---
+// ============================================================================
+// 5. REAL-WORLD DATASETS FOR BATCH INGESTION
+// ============================================================================
+
 export const REAL_WORLD_DATASETS = [
   {
     id: "flint_river_crisis",

@@ -12,7 +12,18 @@ import ReportModal from "@/components/ReportModal";
 import { evaluateFuzzyWaterQuality, PRESETS } from "@/lib/fuzzyEngine";
 import { Droplets, Sparkles, RefreshCw } from "lucide-react";
 
+/**
+ * AquaFuzz AI - Main Interactive Application Page
+ * 
+ * Provides an integrated environmental intelligence dashboard using Mamdani
+ * Fuzzy Inference for continuous water quality assessment, sector risk ratings,
+ * and field chemical treatment calculations.
+ * 
+ * @author Ashank Gupta
+ * @license MIT
+ */
 export default function Home() {
+  // Core physico-chemical sensor state
   const [inputs, setInputs] = useState({
     ph: 7.2,
     turbidity: 2.5,
@@ -20,12 +31,16 @@ export default function Home() {
     tds: 220
   });
 
+  // Inference system options
   const [options] = useState({
     tNorm: "min",
     defuzzMethod: "centroid"
   });
 
+  // Active case study preset ID
   const [currentPresetId, setCurrentPresetId] = useState("municipal_tap");
+
+  // Certificate modal state
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   // Compute live Mamdani Fuzzy Inference result
@@ -33,6 +48,9 @@ export default function Home() {
     return evaluateFuzzyWaterQuality(inputs, options);
   }, [inputs, options]);
 
+  /**
+   * Handles user adjustment of an individual sensor parameter.
+   */
   const handleChangeParam = (paramKey, value) => {
     setInputs((prev) => ({
       ...prev,
@@ -41,6 +59,9 @@ export default function Home() {
     setCurrentPresetId(null);
   };
 
+  /**
+   * Populates inputs with standard water sample presets.
+   */
   const handleSelectPreset = (preset) => {
     setInputs((prev) => ({
       ...prev,
@@ -49,6 +70,9 @@ export default function Home() {
     setCurrentPresetId(preset.id);
   };
 
+  /**
+   * Resets all parameters to standard baseline values.
+   */
   const handleResetDefaults = () => {
     setInputs({
       ph: 7.2,
@@ -59,16 +83,34 @@ export default function Home() {
     setCurrentPresetId("municipal_tap");
   };
 
+  /**
+   * Loads an external sample (e.g. from telemetry or river node) into the live simulator.
+   */
+  const handleLoadSample = (sampleParams) => {
+    setInputs((prev) => ({
+      ...prev,
+      ph: sampleParams.ph,
+      turbidity: sampleParams.turbidity,
+      do: sampleParams.do,
+      tds: sampleParams.tds
+    }));
+    setCurrentPresetId(null);
+    const element = document.getElementById("assessment");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen water-gradient-bg text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950">
-      {/* Floating Navbar */}
+      {/* Floating Smart Island Navbar */}
       <Navbar
         onSelectPreset={handleSelectPreset}
         onOpenReport={() => setReportModalOpen(true)}
         currentPresetId={currentPresetId}
       />
 
-      {/* Main Content */}
+      {/* Main Content Container */}
       <main id="top" className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-24 pb-16 space-y-10">
         {/* Minimalist Hero Section */}
         <section className="text-center pt-4 pb-2">
@@ -99,12 +141,12 @@ export default function Home() {
                 <button
                   key={preset.id}
                   onClick={() => handleSelectPreset(preset)}
+                  title={`Load ${preset.name}: ${preset.description}`}
                   className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                     isActive
                       ? "bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-500/20 scale-105"
                       : "bg-slate-900/80 border border-slate-800 text-slate-300 hover:border-cyan-500/30 hover:text-white"
                   }`}
-                  title={preset.description}
                 >
                   <Droplets className={`w-3 h-3 ${isActive ? "text-slate-950" : "text-cyan-400"}`} />
                   <span>{preset.name}</span>
@@ -114,7 +156,7 @@ export default function Home() {
             <button
               onClick={handleResetDefaults}
               className="text-xs px-2.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1 cursor-pointer"
-              title="Reset parameters"
+              title="Reset parameters to standard baseline"
             >
               <RefreshCw className="w-3 h-3" />
             </button>
@@ -158,6 +200,7 @@ export default function Home() {
             inputs={inputs}
             evaluation={evaluation}
             options={options}
+            onLoadSample={handleLoadSample}
           />
         </section>
       </main>
@@ -184,18 +227,31 @@ export default function Home() {
 
           {/* Quick Nav Links */}
           <div className="flex items-center gap-5 text-[11px] font-medium">
-            <a href="#assessment" className="hover:text-cyan-300 transition-colors cursor-pointer">
+            <a
+              href="#assessment"
+              className="hover:text-cyan-300 transition-colors cursor-pointer"
+              title="Jump to live assessment console"
+            >
               Assessment
             </a>
-            <a href="#dosing" className="hover:text-cyan-300 transition-colors cursor-pointer">
+            <a
+              href="#dosing"
+              className="hover:text-cyan-300 transition-colors cursor-pointer"
+              title="Jump to field chemical dosing"
+            >
               Field Dosing
             </a>
-            <a href="#fuzzy-engine" className="hover:text-cyan-300 transition-colors cursor-pointer">
+            <a
+              href="#fuzzy-engine"
+              className="hover:text-cyan-300 transition-colors cursor-pointer"
+              title="Jump to fuzzy intelligence console"
+            >
               Fuzzy Engine
             </a>
             <button
               onClick={() => setReportModalOpen(true)}
               className="text-cyan-400 hover:text-cyan-300 cursor-pointer font-semibold"
+              title="Print official laboratory certificate"
             >
               Certificate
             </button>
